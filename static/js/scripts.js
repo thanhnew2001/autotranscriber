@@ -5,6 +5,7 @@ let isTranscribing = false;
 let finalTranscript = ''; // Store the complete transcript
 const subtitleDisplay = document.getElementById('subtitles');
 let translationHistory = []; // Array to store translation history
+let currentSubtitleEntry = null; // Track the current subtitle entry
 
 function startRecognition() {
     recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
@@ -18,26 +19,47 @@ function startRecognition() {
     };
 
     recognition.onresult = (event) => {
-        let interimTranscript = ''; // Store the interim transcript
+        let interimTranscript = ''; 
+        let lastFinalSentence = ''; // Store last processed sentence to prevent duplication
+    
         for (let i = event.resultIndex; i < event.results.length; i++) {
-            if (event.results[i].isFinal) {
-                const sentence = event.results[i][0].transcript;
-                sendForTranslation(sentence); // Send the sentence for translation immediately
-                finalTranscript += sentence; // Append to final transcript
+            if (event.results[i].isFinal ) {
+                const sentence = event.results[i][0].transcript.trim();
+                
+                if (sentence !== lastFinalSentence) { // Prevent processing the same sentence twice
+                    finalTranscript += sentence + ' ';
+                    lastFinalSentence = sentence;
+                    
+                    if (!currentSubtitleEntry) {
+                        currentSubtitleEntry = createSubtitleEntry(sentence);
+                    } else {
+                        currentSubtitleEntry.querySelector('.original-text').innerText = sentence;
+                    }
+                    if (sentence.trim().length > 0)
+                        sendForTranslation(sentence, currentSubtitleEntry);
+                    currentSubtitleEntry = null; // Reset for the next segment
+                }
             } else {
-                interimTranscript += event.results[i][0].transcript;
+                interimTranscript += event.results[i][0].transcript + ' ';
             }
         }
-        // Display both final and interim transcripts
-        // updateSubtitles(finalTranscript, interimTranscript); // No longer updating here
+    
+        // Update the current subtitle entry for streaming interim text
+        if (!currentSubtitleEntry) {
+            currentSubtitleEntry = createSubtitleEntry(interimTranscript);
+        } else {
+            currentSubtitleEntry.querySelector('.original-text').innerText = interimTranscript;
+        }
     };
+
+    
 
     recognition.onend = () => {
         isTranscribing = false;
         console.log('Speech recognition ended');
         document.getElementById('toggle-button').innerText = 'Start Transcribing'; // Update button text
-        // sendForTranslation(finalTranscript); // Send the complete transcript for translation
-        finalTranscript = ''; // Clear the transcript for the next Transcribing
+        finalTranscript = ''; // Clear the transcript for the next transcribing session
+        currentSubtitleEntry = null; // Reset subtitle entry
         displayTranslationHistory(); // Display the translation history
     };
 
@@ -48,28 +70,25 @@ function startRecognition() {
     recognition.start();
 }
 
-function updateSubtitles(originalText, translatedText = '') {
-    // Create a new subtitle entry
+function createSubtitleEntry(originalText, translatedText = 'Translating...') {
     const subtitleEntry = document.createElement('div');
     subtitleEntry.classList.add('subtitle-entry');
 
-    // Original text column
     const originalColumn = document.createElement('div');
     originalColumn.classList.add('original-text');
     originalColumn.innerText = originalText;
     subtitleEntry.appendChild(originalColumn);
 
-    // Translated text column
     const translatedColumn = document.createElement('div');
     translatedColumn.classList.add('translated-text');
     translatedColumn.innerText = translatedText;
     subtitleEntry.appendChild(translatedColumn);
 
-    // Prepend the new entry to the subtitles display
     subtitleDisplay.prepend(subtitleEntry);
 
-    // Add to translation history
     translationHistory.push({ original: originalText, translated: translatedText });
+
+    return subtitleEntry;
 }
 
 function toggleTranscribing() {
@@ -83,7 +102,7 @@ function toggleTranscribing() {
 
 document.getElementById('toggle-button').addEventListener('click', toggleTranscribing);
 
-async function sendForTranslation(text) {
+async function sendForTranslation(text, subtitleEntry) {
     try {
         const response = await fetch('/translate', {
             method: 'POST',
@@ -101,33 +120,17 @@ async function sendForTranslation(text) {
 
         const data = await response.json();
         console.log('Translation:', data.translation);
-        updateSubtitles(text, data.translation); // Update subtitles with original and translated text
+        subtitleEntry.querySelector('.translated-text').innerText = data.translation;
     } catch (error) {
         console.error('Error getting translation:', error);
-        updateSubtitles(text, 'Translation Failed'); // Display error message
+        subtitleEntry.querySelector('.translated-text').innerText = 'Translation Failed';
     }
 }
 
 function displayTranslationHistory() {
-    // Clear existing subtitles
     subtitleDisplay.innerHTML = '';
-
-    // Display each entry in the translation history
     translationHistory.forEach(entry => {
-        const subtitleEntry = document.createElement('div');
-        subtitleEntry.classList.add('subtitle-entry');
-
-        const originalColumn = document.createElement('div');
-        originalColumn.classList.add('original-text');
-        originalColumn.innerText = entry.original;
-        subtitleEntry.appendChild(originalColumn);
-
-        const translatedColumn = document.createElement('div');
-        translatedColumn.classList.add('translated-text');
-        translatedColumn.innerText = entry.translated;
-        subtitleEntry.appendChild(translatedColumn);
-
-        subtitleDisplay.appendChild(subtitleEntry);
+        createSubtitleEntry(entry.original, entry.translated);
     });
 }
 
