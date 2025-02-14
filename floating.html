@@ -1,0 +1,57 @@
+<style>
+    #caption-box {
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        width: 300px;
+        height: 100px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 10px;
+        font-size: 18px;
+        overflow: auto;
+        border-radius: 10px;
+        z-index: 9999;
+        cursor: move;
+    }
+  </style>
+  
+  <div id="caption-box">Listening...</div>
+  
+  <script>
+    // Enable Dragging
+    const captionBox = document.getElementById("caption-box");
+    let isDragging = false, offsetX, offsetY;
+  
+    captionBox.addEventListener("mousedown", (e) => {
+        isDragging = true;
+        offsetX = e.clientX - captionBox.getBoundingClientRect().left;
+        offsetY = e.clientY - captionBox.getBoundingClientRect().top;
+    });
+  
+    document.addEventListener("mousemove", (e) => {
+        if (isDragging) {
+            captionBox.style.left = e.clientX - offsetX + "px";
+            captionBox.style.top = e.clientY - offsetY + "px";
+        }
+    });
+  
+    document.addEventListener("mouseup", () => { isDragging = false; });
+  
+    // Speech Recognition API
+    window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+  
+    recognition.onresult = (event) => {
+        let transcript = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript + " ";
+        }
+        captionBox.innerText = transcript;
+    };
+  
+    recognition.start();
+  </script>
+  
