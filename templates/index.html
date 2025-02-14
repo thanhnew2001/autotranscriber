@@ -55,3 +55,42 @@
     <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
 </body>
 </html>
+
+<script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'vi', // Set to Vietnamese only
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+        autoDisplay: false, // Disable the automatic display of the translation widget
+        gaTrack: false, // Disable Google Analytics tracking (optional)
+      }, 'google_translate_element');
+    }
+  </script>
+  <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+  <style>
+    /* Hide the Google Translate top bar */
+    .goog-te-banner-frame {
+      display: none !important;
+    }
+
+    /* Hide the language select box */
+    #google_translate_element select {
+      display: none !important;
+    }
+
+       /* Hide Google Translate floating panel and icon */
+       .goog-te-banner-frame.skiptranslate {
+            display: none !important;
+        }
+        .goog-te-gadget-icon {
+            display: none !important;
+        }
+        body {
+            top: 0 !important;
+        }
+  </style>
+
+    <!-- This div will be used to trigger the translation -->
+    <div id="google_translate_element"></div>

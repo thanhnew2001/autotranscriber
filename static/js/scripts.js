@@ -53,7 +53,6 @@ function startRecognition() {
     };
 
     
-
     recognition.onend = () => {
         isTranscribing = false;
         console.log('Speech recognition ended');
@@ -71,16 +70,22 @@ function startRecognition() {
 }
 
 function createSubtitleEntry(originalText, translatedText = 'Translating...') {
+
+    if (originalText.trim().length == 0) return;
+
     const subtitleEntry = document.createElement('div');
     subtitleEntry.classList.add('subtitle-entry');
 
     const originalColumn = document.createElement('div');
     originalColumn.classList.add('original-text');
+    originalColumn.classList.add('notranslate');
     originalColumn.innerText = originalText;
     subtitleEntry.appendChild(originalColumn);
 
     const translatedColumn = document.createElement('div');
     translatedColumn.classList.add('translated-text');
+    translatedColumn.classList.add('translate');
+
     translatedColumn.innerText = translatedText;
     subtitleEntry.appendChild(translatedColumn);
 
@@ -102,29 +107,38 @@ function toggleTranscribing() {
 
 document.getElementById('toggle-button').addEventListener('click', toggleTranscribing);
 
+// async function sendForTranslation(text, subtitleEntry) {
+//     try {
+//         const response = await fetch('/translate', {
+//             method: 'POST',
+//             headers: {
+//                 'Content-Type': 'application/json'
+//             },
+//             body: JSON.stringify({
+//                 text: text
+//             })
+//         });
+
+//         if (!response.ok) {
+//             throw new Error(`HTTP error! status: ${response.status}`);
+//         }
+
+//         const data = await response.json();
+//         console.log('Translation:', data.translation);
+//         subtitleEntry.querySelector('.translated-text').innerText = data.translation;
+
+//     } catch (error) {
+//         console.error('Error getting translation:', error);
+//         subtitleEntry.querySelector('.translated-text').innerText = 'Translation Failed';
+//     }
+// }
+
 async function sendForTranslation(text, subtitleEntry) {
-    try {
-        const response = await fetch('/translate', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                text: text
-            })
-        });
+   
+    console.log('Translation:',text);
+    subtitleEntry.querySelector('.translated-text').innerText = text;
+    translateHTML();
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log('Translation:', data.translation);
-        subtitleEntry.querySelector('.translated-text').innerText = data.translation;
-    } catch (error) {
-        console.error('Error getting translation:', error);
-        subtitleEntry.querySelector('.translated-text').innerText = 'Translation Failed';
-    }
 }
 
 function displayTranslationHistory() {
@@ -156,3 +170,26 @@ document.getElementById('download-translated').addEventListener('click', () => {
     const translatedText = translationHistory.map(entry => entry.translated).join('\n');
     downloadText('translated.txt', translatedText);
 });
+
+function translateHTML() {
+            //hide google_translate_element
+         document.getElementById('google_translate_element').style.display = 'none';
+        //hide the frame
+        document.querySelector('.skiptranslate').style.display = 'none';
+
+    setTimeout(function() {
+        var iframe = document.querySelector('.goog-te-banner-frame');
+        if (iframe) {
+            iframe.contentWindow.location.reload(); // Reload Google Translate to translate new content
+        }
+      
+        var translateDiv = document.getElementById('google_translate_element');
+        var dummyDiv = document.createElement('div');
+        translateDiv.appendChild(dummyDiv); // Appending dummy div forces reflow
+
+
+    }, 500);
+
+
+}
+
