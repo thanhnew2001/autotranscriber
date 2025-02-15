@@ -31,6 +31,18 @@
             <div class="col-md-12 text-center">
                 <h1 class="mb-4">Live Caption Tool 📝</h1>
                 <p>Click the button to start live captions in a floating window. 🎥</p>
+                   <!-- Language Selection Dropdown -->
+                   <label for="language">Choose a language:</label>
+                   <select id="language" class="form-control mb-2">
+                       <option value="en-US">English (US)</option>
+                       <option value="vi-VN" selected>Vietnamese</option>
+                       <option value="fr-FR">French</option>
+                       <option value="es-ES">Spanish</option>
+                       <option value="de-DE">German</option>
+                       <option value="zh-CN">Chinese (Simplified)</option>
+                       <option value="ja-JP">Japanese</option>
+                       <option value="ko-KR">Korean</option>
+                   </select>
                 <button class="btn btn-primary mb-2" onclick="openFloatingCaptionWindow()">Start Live Captions 🚀</button>
                 <button id="close-caption-button" class="btn btn-danger mb-2" onclick="closeFloatingCaptionWindow()" disabled>Close Live Captions ❌</button>
                 <button id="download-transcription-button" class="btn btn-success mb-2" onclick="downloadTranscription()" disabled>Download Transcription 📥</button>
@@ -65,8 +77,8 @@
         function openFloatingCaptionWindow() {
             const screenWidth = window.screen.width;
             const screenHeight = window.screen.height;
-            captionWindow = window.open("", "LiveCaptions", `width=${screenWidth},height=100,top=${screenHeight - 100},left=0,toolbar=no,scrollbars=no,resizable=no`);
-
+            captionWindow = window.open("", "LiveCaptions 🔴", `width=${screenWidth},height=100,top=${screenHeight - 100},left=0,toolbar=no,scrollbars=yes,resizable=yes`);
+            let language = document.getElementById('language').value;
             // HTML for floating window
             const floatingHtml = `
                 <!DOCTYPE html>
@@ -82,7 +94,7 @@
                             color: white;
                             padding: 10px;
                             margin: 0;
-                            overflow: hidden;
+                            overflow-y: auto; /* Enable scrolling */
                         }
                         #captions {
                             width: 100%;
@@ -105,19 +117,27 @@
                         const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
                         recognition.continuous = true;
                         recognition.interimResults = true;
+                        recognition.lang = '${language}';
 
                         recognition.onresult = (event) => {
                             let interimTranscript = '';
-                            for (let i = event.resultIndex; i < event.results.length; i++) {
-                                if (event.results[i].isFinal) {
-                                    const sentence = event.results[i][0].transcript.trim();
-                                    document.getElementById('captions').innerText += sentence + ' ';
-                                    window.opener.addTranscription(sentence); // Send final sentence to parent window
-                                } else {
-                                    interimTranscript += event.results[i][0].transcript + ' ';
-                                }
+                            let resultIndex = event.resultIndex;
+              
+                            if (event.results[resultIndex].isFinal) {
+                                const sentence = event.results[resultIndex][0].transcript.trim();
+                                window.opener.addTranscription(sentence); // Send final sentence to parent window
+                            } else {
+                                interimTranscript = event.results[resultIndex][0].transcript + ' ';
                             }
+                            
+                            // let showText = interimTranscript;
+                            // if (interimTranscript.length > 200){
+                            //     showText = interimTranscript.slice(-200)
+                            // }
+
                             document.getElementById('captions').innerText = interimTranscript;
+
+   
                         };
 
                         recognition.onend = () => {
@@ -125,6 +145,12 @@
                         };
 
                         recognition.start();
+                        
+                         // Auto-scroll every 0.5s
+                        setInterval(() => {
+                            window.scrollTo(0, document.body.scrollHeight);
+                        }, 500);
+
                     <\/script>
                 </body>
                 </html>
