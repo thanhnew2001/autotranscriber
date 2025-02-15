@@ -209,6 +209,11 @@
 
         async function summarizeTranscription() {
             let lang = document.getElementById('language').value;
+            const summarizeButton = document.getElementById('summarize-transcription-button');
+            const createQuizButton = document.getElementById('create-quiz-button');
+            summarizeButton.disabled = true;
+            createQuizButton.disabled = true;
+
             const response = await fetch('/summarize', {
                 method: 'POST',
                 headers: {
@@ -219,10 +224,17 @@
             const data = await response.json();
             const summarizedResultDiv = document.getElementById('summarized-result');
             summarizedResultDiv.innerHTML = '<ul>' + data.summary.map(point => `<li>💡 ${point}</li>`).join('') + '</ul>';
+            summarizeButton.disabled = false;
+            createQuizButton.disabled = false;
         }
 
         async function createQuiz() {
             let lang = document.getElementById('language').value;
+            const summarizeButton = document.getElementById('summarize-transcription-button');
+            const createQuizButton = document.getElementById('create-quiz-button');
+            summarizeButton.disabled = true;
+            createQuizButton.disabled = true;
+
             const response = await fetch('/create-quiz', {
                 method: 'POST',
                 headers: {
@@ -233,6 +245,9 @@
             const data = await response.json();
             const quizResultDiv = document.getElementById('quiz-result');
             displayQuiz(data.quiz, quizResultDiv);
+
+            summarizeButton.disabled = false;
+            createQuizButton.disabled = false;
         }
 
         // Function to display the quiz using innerHTML
