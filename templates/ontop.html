@@ -208,12 +208,13 @@
         }
 
         async function summarizeTranscription() {
+            let lang = document.getElementById('language').value;
             const response = await fetch('/summarize', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ transcriptions: transcriptionHistory.map(entry => entry.text).join(' ') })
+                body: JSON.stringify({ lang: lang, transcriptions: transcriptionHistory.map(entry => entry.text).join(' ') })
             });
             const data = await response.json();
             const summarizedResultDiv = document.getElementById('summarized-result');
@@ -221,12 +222,13 @@
         }
 
         async function createQuiz() {
+            let lang = document.getElementById('language').value;
             const response = await fetch('/create-quiz', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ transcriptions: transcriptionHistory.map(entry => entry.text).join(' ') })
+                body: JSON.stringify({ lang: lang , transcriptions: transcriptionHistory.map(entry => entry.text).join(' ') })
             });
             const data = await response.json();
             const quizResultDiv = document.getElementById('quiz-result');

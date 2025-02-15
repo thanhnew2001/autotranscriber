@@ -23,13 +23,14 @@ def index():
 def summarize():
     data = request.get_json()
     transcriptions = data['transcriptions']
+    lang = data['lang']
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "user", "content": f"""Summarize the following text, if the content is too complicated, 
+            {"role": "user", "content": f"""Summarize the following text in {lang} language, if the content is too complicated, 
              then break them down into multi-level. In the return text, 
              use bullet point system such as 1, 1.1, 1.2 then 2, 2.1, 2.2:
              \n\n{transcriptions}"""}
@@ -45,13 +46,14 @@ def summarize():
 def create_quiz():
     data = request.get_json()
     transcriptions = data['transcriptions']
+    lang = data['lang']
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "user", "content": f"Create a MC quiz based on this text:\n\n{transcriptions}"}
+            {"role": "user", "content": f"Create a MC quiz based on this text in {lang} language:\n\n{transcriptions}"}
         ]
     )
     quiz = response.choices[0].message.content
